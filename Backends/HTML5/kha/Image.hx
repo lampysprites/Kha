@@ -5,6 +5,7 @@ import haxe.io.Bytes;
 import js.html.ImageElement;
 import js.html.CanvasElement;
 import js.html.webgl.GL;
+import js.html.webgl.GL2;
 import kha.graphics4.TextureFormat;
 import kha.graphics4.DepthStencilFormat;
 import kha.graphics4.Usage;
@@ -33,6 +34,18 @@ class Image implements Canvas implements Resource {
 			return new CanvasImage(width, height, format, true);
 		else
 			return new WebGLImage(width, height, format, true, depthStencil, antiAliasingSamples, false);
+	}
+
+	public static function createArray(images: Array<Image>, format: TextureFormat = null): Image {
+		if (!SystemImpl.gl2)
+			return null;
+		if (format == null)
+			format = TextureFormat.RGBA32;
+		final width = images.length > 0 ? images[0].width : 1,
+			height = images.length > 0 ? images[0].height : 1,
+			image = new WebGLImage(width, height, format, false, NoDepthAndStencil, 1, false);
+		image.createTextureArray(images);
+		return image;
 	}
 
 	public static function fromCanvas(canvas: CanvasElement): Image {

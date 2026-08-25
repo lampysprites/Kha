@@ -391,8 +391,14 @@ class Graphics implements kha.graphics4.Graphics {
 		cast(texture, WebGLImage).setDepth((cast stage : TextureUnit).value);
 	}
 
-	public function setTextureArray(unit: kha.graphics4.TextureUnit, texture: kha.Image): Void {
-		// not implemented yet.
+	public function setTextureArray(stage: kha.graphics4.TextureUnit, texture: kha.Image): Void {
+		if (texture == null) {
+			SystemImpl.gl.activeTexture(GL.TEXTURE0 + (cast stage : TextureUnit).value);
+			SystemImpl.gl.bindTexture(GL2.TEXTURE_2D_ARRAY, null);
+		}
+		else {
+			cast(texture, WebGLImage).setArray((cast stage : TextureUnit).value);
+		}
 	}
 
 	public function setVideoTexture(unit: kha.graphics4.TextureUnit, texture: kha.Video): Void {

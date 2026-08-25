@@ -5,6 +5,7 @@ import js.Browser;
 import js.html.VideoElement;
 import js.html.webgl.Framebuffer;
 import js.html.webgl.GL;
+import js.html.webgl.GL2;
 import js.html.webgl.Renderbuffer;
 import js.html.webgl.Texture;
 import js.lib.Float32Array;
@@ -319,6 +320,25 @@ class WebGLImage extends Image {
 		SystemImpl.gl.bindTexture(GL.TEXTURE_2D, null);
 	}
 
+	public function createTextureArray(images: Array<Image>): Void {
+		texture = SystemImpl.gl.createTexture();
+
+		SystemImpl.gl.bindTexture(GL2.TEXTURE_2D_ARRAY, texture);
+
+		final gl = cast(SystemImpl.gl, GL2);
+		gl.texStorage3D(GL2.TEXTURE_2D_ARRAY, 1, GL2.RGBA8, myWidth, myHeight, images.length);
+
+		for (i => img in images)
+			gl.texSubImage3D(GL2.TEXTURE_2D_ARRAY, 0, 0, 0, i, img.width, img.height, 1, GL.RGBA, GL.UNSIGNED_BYTE, cast(img, WebGLImage).image);
+
+		SystemImpl.gl.texParameteri(GL2.TEXTURE_2D_ARRAY, GL.TEXTURE_MAG_FILTER, GL.LINEAR);
+		SystemImpl.gl.texParameteri(GL2.TEXTURE_2D_ARRAY, GL.TEXTURE_MIN_FILTER, GL.LINEAR);
+		SystemImpl.gl.texParameteri(GL2.TEXTURE_2D_ARRAY, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
+		SystemImpl.gl.texParameteri(GL2.TEXTURE_2D_ARRAY, GL.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE);
+
+		SystemImpl.gl.bindTexture(GL2.TEXTURE_2D_ARRAY, null);
+	}
+
 	function initDepthStencilBuffer(depthStencilFormat: DepthStencilFormat) {
 		switch (depthStencilFormat) {
 			case NoDepthAndStencil:
@@ -400,6 +420,11 @@ class WebGLImage extends Image {
 	public function setDepth(stage: Int): Void {
 		SystemImpl.gl.activeTexture(GL.TEXTURE0 + stage);
 		SystemImpl.gl.bindTexture(GL.TEXTURE_2D, depthTexture);
+	}
+
+	public function setArray(stage: Int): Void {
+		SystemImpl.gl.activeTexture(GL.TEXTURE0 + stage);
+		SystemImpl.gl.bindTexture(GL2.TEXTURE_2D_ARRAY, texture);
 	}
 
 	override public function setDepthStencilFrom(image: Image): Void {
