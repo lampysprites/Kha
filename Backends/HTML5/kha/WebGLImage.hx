@@ -47,6 +47,7 @@ class WebGLImage extends Image {
 	var readable: Bool;
 
 	// WebGL2 constants
+	static inline var GL_RGBA8 = 0x8058;
 	static inline var GL_RGBA16F = 0x881A;
 	static inline var GL_RGBA32F = 0x8814;
 	static inline var GL_R16F = 0x822D;
@@ -321,16 +322,37 @@ class WebGLImage extends Image {
 	}
 
 	public function createTextureArray(images: Array<Image>): Void {
+		var gl = cast(SystemImpl.gl, GL2),
+			internalFormat = GL.RGBA,
+			format = GL.RGBA, 
+			type = GL.UNSIGNED_BYTE;
+		switch (myFormat) {
+			case RGBA128:
+				internalFormat = GL_RGBA32F;
+				type = GL.FLOAT;
+			case RGBA64:
+				internalFormat = GL_RGBA16F;
+				type = SystemImpl.halfFloat.HALF_FLOAT_OES;
+			case RGBA32:
+				internalFormat = GL_RGBA8;
+			case A32:
+				internalFormat = GL_R32F;
+				format = GL_RED;
+				type = GL.FLOAT;
+			case A16:
+				internalFormat = GL_R16F;
+				format = GL_RED;
+				type = SystemImpl.halfFloat.HALF_FLOAT_OES;
+			case L8:
+				internalFormat = GL.LUMINANCE;
+				format = GL.LUMINANCE;
+			default:
+		}
 		texture = SystemImpl.gl.createTexture();
-
 		SystemImpl.gl.bindTexture(GL2.TEXTURE_2D_ARRAY, texture);
-
-		final gl = cast(SystemImpl.gl, GL2);
-		gl.texStorage3D(GL2.TEXTURE_2D_ARRAY, 1, GL2.RGBA8, myWidth, myHeight, images.length);
-
+		gl.texStorage3D(GL2.TEXTURE_2D_ARRAY, 1, internalFormat, myWidth, myHeight, images.length);
 		for (i => img in images)
-			gl.texSubImage3D(GL2.TEXTURE_2D_ARRAY, 0, 0, 0, i, img.width, img.height, 1, GL.RGBA, GL.UNSIGNED_BYTE, cast(img, WebGLImage).image);
-
+			gl.texSubImage3D(GL2.TEXTURE_2D_ARRAY, 0, 0, 0, i, myWidth, myHeight, 1, format, type, cast(img, WebGLImage).image);
 		SystemImpl.gl.texParameteri(GL2.TEXTURE_2D_ARRAY, GL.TEXTURE_MAG_FILTER, GL.LINEAR);
 		SystemImpl.gl.texParameteri(GL2.TEXTURE_2D_ARRAY, GL.TEXTURE_MIN_FILTER, GL.LINEAR);
 		SystemImpl.gl.texParameteri(GL2.TEXTURE_2D_ARRAY, GL.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE);
